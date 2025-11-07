@@ -72,7 +72,7 @@ _prompt() {
 }
 
 # Load preferences
-TIME_HOURS="" PARTITION="" CPUS="" RAM="" GPU=""
+TIME_HOURS="" ACCOUNT="" CPUS="" RAM="" GPU=""
 REMOTE_PORT="" LOCAL_PORT="" CONTAINER_PATH="" PY_BACKEND_VER=""
 
 if [[ -f "$PREFS_FILE" && -r "$PREFS_FILE" ]]; then
@@ -85,14 +85,15 @@ printf "${RST}\n"
 printf "${BLD}Resource Configuration${RST}\n"
 
 while true; do
-  _prompt "Job duration (hours)${TIME_HOURS:+ ${GRY}[$TIME_HOURS]${RST}}: " "$TIME_HOURS" TIME_HOURS
-  [[ -n "$TIME_HOURS" && "$TIME_HOURS" =~ ^[0-9]+$ ]] && break
-  _error "Must be an integer"
+  _prompt "Account (required)${ACCOUNT:+ ${GRY}[$ACCOUNT]${RST}}: " "$ACCOUNT" ACCOUNT
+  [[ -n "$ACCOUNT" ]] && break
+  _error "Account is required"
 done
 
 while true; do
-  _prompt "Partition${PARTITION:+ ${GRY}[$PARTITION]${RST}}: " "${PARTITION:-any}" PARTITION
-  [[ -n "$PARTITION" ]] && break
+  _prompt "Job duration (hours)${TIME_HOURS:+ ${GRY}[$TIME_HOURS]${RST}}: " "$TIME_HOURS" TIME_HOURS
+  [[ -n "$TIME_HOURS" && "$TIME_HOURS" =~ ^[0-9]+$ ]] && break
+  _error "Must be an integer"
 done
 
 while true; do
@@ -143,8 +144,8 @@ _prompt "Backend${PY_BACKEND_VER:+ ${GRY}[$PY_BACKEND_VER]${RST}} (Available: ${
 
 # Save preferences
 cat > "$PREFS_FILE" <<PREFS
+ACCOUNT=$ACCOUNT
 TIME_HOURS=$TIME_HOURS
-PARTITION=$PARTITION
 CPUS=$CPUS
 RAM=$RAM
 GPU=$GPU
@@ -171,8 +172,7 @@ JOBSCRIPT
 chmod +x "$JB/job_script.sh"
 
 # Build sbatch command
-SBATCH_CMD="sbatch --cpus-per-task=$CPUS --mem=$RAM_MB"
-[[ "$PARTITION" != "any" ]] && SBATCH_CMD="$SBATCH_CMD --partition=$PARTITION"
+SBATCH_CMD="sbatch --account=$ACCOUNT --cpus-per-task=$CPUS --mem=$RAM_MB"
 SBATCH_CMD="$SBATCH_CMD --time=${TIME_HOURS}:00:00 --job-name=$JOB_NAME"
 [[ "$GPU" == "yes" ]] && SBATCH_CMD="$SBATCH_CMD --gres=gpu:1"
 SBATCH_CMD="$SBATCH_CMD --output=$JB/slurm-%j.out --error=$JB/slurm-%j.err"
