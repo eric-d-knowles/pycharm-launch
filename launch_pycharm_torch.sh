@@ -28,23 +28,22 @@ fi
 
 SSH_CONFIG="$HOME/.ssh/config"
 LOCAL_REMOTE_SCRIPT="remote_launcher_torch.sh"
-CONTROL_PATH="$HOME/.ssh/control-torch-%r@%h:%p"
+CONTROL_DIR="$HOME/.ssh"
+CONTROL_PATH="$CONTROL_DIR/control-torch-%C"
 
 cleanup() {
   set +e
 
-  # Cancel jobs and kill salloc (if control socket exists)
-  if [[ -S "$CONTROL_PATH" ]]; then
-    ssh -q -o ControlPath="$CONTROL_PATH" torch 'scancel -u "$USER" 2>/dev/null' || true
-    ssh -q -o ControlPath="$CONTROL_PATH" torch 'pkill -u "$USER" salloc 2>/dev/null' || true
-    sleep 1
+  # Cancel jobs and kill salloc (using control socket if available)
+  ssh -q -o ControlPath="$CONTROL_PATH" torch 'scancel -u "$USER" 2>/dev/null' || true
+  ssh -q -o ControlPath="$CONTROL_PATH" torch 'pkill -u "$USER" salloc 2>/dev/null' || true
+  sleep 1
 
-    # Clean remote dir
-    ssh -q -o ControlPath="$CONTROL_PATH" torch 'rm -rf /scratch/$USER/.jb 2>/dev/null; mkdir -p /scratch/$USER/.jb' || true
-  fi
+  # Clean remote dir
+  ssh -q -o ControlPath="$CONTROL_PATH" torch 'rm -rf /scratch/$USER/.jb 2>/dev/null; mkdir -p /scratch/$USER/.jb' || true
 
-  # Kill local tunnels (matches ProxyJump to torch)
-  pkill -f "ssh -N -f .*-J torch" 2>/dev/null || true
+  # Kill local tunnels
+  pkill -f "ssh -N -f .*torch" 2>/dev/null || true
 
   # Close control socket
   ssh -q -O exit -o ControlPath="$CONTROL_PATH" torch 2>/dev/null || true
