@@ -61,14 +61,14 @@ printf "┃          PyCharm Remote Development Launcher          ┃\n"
 printf "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n"
 printf "${RST}\n"
 
-# Cleanup previous session
-printf "Cleaning up previous session... "
-cleanup
-printf "${GRN}✓${RST}\n"
-
 # Establish control master connection
 printf "Establishing connection to torch... "
 ssh -o ControlMaster=yes -o ControlPath="$CONTROL_PATH" -o ControlPersist=10m -fN torch
+printf "${GRN}✓${RST}\n"
+
+# Cleanup previous session
+printf "Cleaning up previous session... "
+cleanup
 printf "${GRN}✓${RST}\n"
 
 # Upload remote script
@@ -104,18 +104,12 @@ source /tmp/session_info_$$
 rm -f /tmp/session_info_$$
 printf "${GRN}✓${RST}\n"
 
-# Get remote username from torch config
-REMOTE_USER=$(ssh -G torch | grep "^user " | awk '{print $2}')
-if [[ -z "$REMOTE_USER" ]]; then
-  printf "${RED}Failed to get remote username${RST}\n"
-  exit 1
-fi
-
-# Create tunnel
+# Create tunnel using control master connection
 printf "Creating SSH tunnel... "
 
-ssh -N -f -o ExitOnForwardFailure=yes \
-  -L "${LOCAL_PORT}:127.0.0.1:${REMOTE_PORT}" -J torch "${REMOTE_USER}@${NODE}"
+# Use the existing control master to create a tunnel through torch to the compute node
+ssh -N -f -o ControlPath="$CONTROL_PATH" -o ExitOnForwardFailure=yes \
+  -L "${LOCAL_PORT}:${NODE}:${REMOTE_PORT}" torch
 printf "${GRN}✓${RST}\n"
 
 # Generate local join link if JOIN_URL is available
