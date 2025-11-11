@@ -89,11 +89,8 @@ printf "┃          PyCharm Remote Development Launcher          ┃\n"
 printf "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n"
 printf "${RST}\n"
 
-# Clean up stale control socket if it exists
-if ! ssh -o ControlPath="$CONTROL_PATH" -O check torch 2>/dev/null; then
-  # Control socket exists but is not responding - remove it
-  rm -f "$HOME"/.ssh/control-torch-* 2>/dev/null || true
-fi
+# Always clean up any existing control sockets to ensure fresh connection
+rm -f "$HOME"/.ssh/control-torch-* 2>/dev/null || true
 
 # Establish control master connection
 # Use -o to override any ControlMaster=no in config
