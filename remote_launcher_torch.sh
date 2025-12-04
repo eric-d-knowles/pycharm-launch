@@ -221,6 +221,8 @@ fi
 # Setup singularity args
 SING_ARGS="exec"
 [[ "$GPU" == "yes" ]] && SING_ARGS="$SING_ARGS --nv"
+# Ensure /archive is available inside the container for RocksDB/archives
+SING_ARGS="$SING_ARGS --bind /archive:/archive"
 
 # Export env for container
 export APPTAINERENV_JB_REMOTE_DEV_SCRIPT="$BP"
