@@ -28,6 +28,7 @@ fi
 
 SSH_CONFIG="$HOME/.ssh/config"
 LOCAL_REMOTE_SCRIPT="remote_launcher_torch.sh"
+REMOTE_SCRIPT="/scratch/\$USER/.jb/remote_launcher.sh"
 # Expand $HOME for ControlPath
 CONTROL_PATH="$HOME/.ssh/control-torch-%C"
 
@@ -127,11 +128,11 @@ if [[ ! -f "$LOCAL_REMOTE_SCRIPT" ]]; then
   exit 1
 fi
 
-cat "$LOCAL_REMOTE_SCRIPT" | ssh -o ControlMaster=auto -o ControlPath="$CONTROL_PATH" torch 'tee /tmp/remote_launcher.sh > /dev/null && chmod +x /tmp/remote_launcher.sh'
+cat "$LOCAL_REMOTE_SCRIPT" | ssh -o ControlMaster=auto -o ControlPath="$CONTROL_PATH" torch "cat > $REMOTE_SCRIPT && chmod +x $REMOTE_SCRIPT"
 printf "${GRN}✓${RST}\n"
 
 # Run remote script
-if ! ssh -t -o ControlMaster=auto -o ControlPath="$CONTROL_PATH" torch '/tmp/remote_launcher.sh'; then
+if ! ssh -t -o ControlMaster=auto -o ControlPath="$CONTROL_PATH" torch "$REMOTE_SCRIPT"; then
   printf "\n${RED}✗${RST} Remote launcher failed\n"
   exit 1
 fi
