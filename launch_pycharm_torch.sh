@@ -127,7 +127,7 @@ if [[ ! -f "$LOCAL_REMOTE_SCRIPT" ]]; then
   exit 1
 fi
 
-cat "$LOCAL_REMOTE_SCRIPT" | ssh -o ControlMaster=auto -o ControlPath="$CONTROL_PATH" torch 'cat > /tmp/remote_launcher.sh && chmod +x /tmp/remote_launcher.sh'
+cat "$LOCAL_REMOTE_SCRIPT" | ssh -o ControlMaster=auto -o ControlPath="$CONTROL_PATH" torch 'tee /tmp/remote_launcher.sh > /dev/null && chmod +x /tmp/remote_launcher.sh'
 printf "${GRN}✓${RST}\n"
 
 # Run remote script
