@@ -1,2 +1,2 @@
-# pycharm-greene
-Shell script to launch remote PyCharm session on NYU's Greene cluster.
+# pycharm-launch
+Shell script to launch remote PyCharm session on NYU's torch cluster.
